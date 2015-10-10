@@ -1,5 +1,5 @@
 # repo name
-BINARY_NAME ?= $(shell basename `git rev-parse --show-toplevel`)
+BINARY_NAME = $(shell basename `git rev-parse --show-toplevel`)
 
 DATE := $(shell date -Idate)
 #$(shell date +"%Y%m%d%H%M")
@@ -15,7 +15,7 @@ STRIP_VERSION :=$(shell cat VERSION | cut -c 2-)
 PACKAGE_RELEASE_VERSION = $(DRONE_BUILD_NUMBER)
 PACKAGE_RELEASE_VERSION ?= 1
 
-PACKAGE_VERSION=\(STRIP_VERSION)-$(PACKAGE_RELEASE_VERSION)
+PACKAGE_VERSION=$(VERSION)-$(PACKAGE_RELEASE_VERSION)
 
 PACKAGE_NAME="$(BINARY_NAME)_$(PACKAGE_VERSION)"
 
@@ -26,7 +26,9 @@ DOWNLOADPATH := $(shell cat DOWNLOADPATH)
 # folder to safe the results
 BUILD_DIR := $(BUILD_RESULTS)/$(BINARY_NAME)/$(DATE)_$(COMMIT_HASH)
 
-default:
+default: dockerbuild dockerpush
+
+demo:
 	echo "please select your targets"
 	cat << EOM
 	#download_from_S3:
@@ -117,7 +119,7 @@ dockerpush:
 	docker push $(REGISTRY_URL)/$(REGISTRY_NAMESPACE)/$(BINARY_NAME):$(DATE)
 	# push latest
 	docker tag -f $(REGISTRY_NAMESPACE)/$(BINARY_NAME):latest $(REGISTRY_URL)/$(REGISTRY_NAMESPACE)/$(BINARY_NAME):latest
-	docker push $(REGISTRY_URL)/$(REGISTRY_NAMESPACE)/$(IMAGENAME):latest
+	docker push $(REGISTRY_URL)/$(REGISTRY_NAMESPACE)/$(BINARY_NAME):latest
 	# remove tags
 	docker rmi $(REGISTRY_URL)/$(REGISTRY_NAMESPACE)/$(BINARY_NAME):$(VERSION) || true
 	docker rmi $(REGISTRY_URL)/$(REGISTRY_NAMESPACE)/$(BINARY_NAME):$(COMMIT_HASH) || true
@@ -126,8 +128,9 @@ dockerpush:
 
 # save the image as tar
 dockersave:
-	mkdir -p $(BUILD_DIR)/imageexport
-	docker save --output="$(BUILD_DIR)/imageexport/$(BINARY_NAME).tar" $(REGISTRY_NAMESPACE)/$(BINARY_NAME):latest
+	mkdir -p $(BUILD_DIR)
+	docker tag $(REGISTRY_NAMESPACE)/$(BINARY_NAME):latest hypriot/$(BINARY_NAME)
+	docker save --output="$(BUILD_DIR)/$(BINARY_NAME).tar" hypriot/$(BINARY_NAME)
 
 # pull a docker image from a docker registry
 dockerpull:
@@ -143,16 +146,16 @@ copy_binary_to_upload_folder:
 	mkdir -p $(BUILD_DIR)/binary/
 	cp $(BINARY_NAME) $(BUILD_DIR)/binary/
 	cd $(BUILD_DIR)/binary/ && shasum -a 256 $(BINARY_NAME) > $(BINARY_NAME).sha256
-	BINARY_SIZE = $(shell stat -c %s $(BUILD_DIR)/binary/$(BINARY_NAME))
+#	BINARY_SIZE = $(shell stat -c %s $(BUILD_DIR)/binary/$(BINARY_NAME))
 
 copy_deb_to upload_folder:
-        pwd && ls -la .
-        cp -r builds/* $(BUILD_DIR)/package/
+	pwd && ls -la .
+	cp -r builds/* $(BUILD_DIR)/package/
 
 create_sha256_checksums:
 	echo create checksums
-        find_files = $(notdir $(wildcard $(BUILD_DIR)/package/*))
-        echo $(foreach dir,$(find_files),$(shell cd $(BUILD_DIR)/package && shasum -a 256 $(dir) >> $(dir).sha256))
+	find_files = $(notdir $(wildcard $(BUILD_DIR)/package/*))
+	echo $(foreach dir,$(find_files),$(shell cd $(BUILD_DIR)/package && shasum -a 256 $(dir) >> $(dir).sha256))
 
 build_debian_package:
 	echo "build debian package"
@@ -183,4 +186,3 @@ compile:
 # OR
 # other ways to generate binaries in the current directory for copying them with the <copy_binary_to_upload_folder> target
 # or copying them on your own
-
