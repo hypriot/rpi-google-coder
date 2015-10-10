@@ -4,6 +4,7 @@ docker:
     - /var/run/docker.sock:/var/run/docker.sock
 git:
   path: github.com/hypriot/rpi-google-coder
+
 script:
   - echo "+++++ start docker daemon +++++"
   - wrapdocker &
@@ -14,6 +15,7 @@ script:
   - echo "+++++ stop docker daemon +++++"
   - start-stop-daemon --stop --pidfile "/var/run/docker.pid"
   - echo -e "#####################\n***** COMPLETED *****\n#####################"
+
 publish:
   s3:
     acl: public-read
@@ -24,6 +26,7 @@ publish:
     source: $$BUILD_RESULTS
     target: $$S3_PREFIX
     recursive: true
+
 notify:
   slack:
     webhook_url: $$SLACK_WEBHOOK_URL
