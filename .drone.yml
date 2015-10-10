@@ -30,4 +30,3 @@ notify:
     on_started: false
     on_success: true
     on_failure: true
-
