@@ -15,6 +15,10 @@ WORKDIR /opt/coder/coder-base
 RUN npm install
 
 COPY config.js /opt/coder/coder-base/config.js
+
+#Volume
+VOLUME /opt/coder
+
 #EXPOSE 80 443
 EXPOSE 8080 8081
 CMD ["node","server.js"]
