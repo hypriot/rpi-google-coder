@@ -1,15 +1,18 @@
-###Google Coder for ARM devices
-#####Docker image
+# rpi-google-coder
+
+Google Coder as ARM compatible Docker image
+
+## Docker image
 
 [Google Coder](http://googlecreativelab.github.io/coder/) is an awesome project that provides a complete coding environment in your browser.
 It is made specifically for Raspberry Pi as it allows to access the hardware of the Pi via the GPIO's.
 
-#####Build the image
+## Build the image
 ```
 docker build -t hypriot/rpi-google-coder github.com/hypriot/rpi-google-coder
 ```
 
-#####Run Google Coder
+## Run Google Coder
 ```
 docker run -d -p 8080:8080 -p 8081:8081 hypriot/rpi-google-coder
 ```
